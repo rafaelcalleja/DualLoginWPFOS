@@ -44,6 +44,6 @@ security:
     firewalls:
         secured_area:
         ...
-        duallogin: true
+            duallogin: true
         ...
     
