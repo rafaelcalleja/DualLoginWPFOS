@@ -6,37 +6,23 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\NonceExpiredException;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Acme\DemoBundle\Security\Authentication\Token\WsseUserToken;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
-class DualLoginProvider implements AuthenticationProviderInterface
+use Hypebeast\WordpressBundle\Wordpress\ApiAbstraction;
+use Hypebeast\WordpressBundle\Security\Authentication\Provider\WordpressLoginAuthenticationProvider;
+
+class DualLoginProvider extends WordpressLoginAuthenticationProvider
 {
-    private $userProvider;
-    private $cacheDir;
-
-    public function __construct(UserProviderInterface $userProvider, $cacheDir)
-    {
-        $this->userProvider = $userProvider;
-        $this->cacheDir     = $cacheDir;
+    
+    public function __construct(UserProviderInterface $userProvider, $cacheDir, ApiAbstraction $api){
+		parent::__construct($api, parent::isRememberMeRequested());
     }
 
-    public function authenticate(TokenInterface $token)
-    {
-    	
-        $user = $this->userProvider->loadUserByUsername($token->getUsername());
-		
-        if ($user && $this->validateDigest($token->digest, $token->nonce, $token->created, $user->getPassword())) {
-            $authenticatedToken = new WsseUserToken($user->getRoles());
-            $authenticatedToken->setUser($user);
-
-            return $authenticatedToken;
-        }
-
-        throw new AuthenticationException('The Dual Login authentication failed.');
+    public function authenticate(TokenInterface $token){
+    	parent::authenticate($token);
     }
 
-   
-    public function supports(TokenInterface $token)
-    {
-        return $token instanceof WsseUserToken;
+    public function supports(TokenInterface $token){
+    	return parent::supports($token);
     }
 }
